@@ -163,7 +163,7 @@ Use the sdd skill. Write the design for allowance-ledger, including the REQ-to-c
 |---|---|
 | Does the report need per-subscriber detail, or only totals? | Per-subscriber remaining allowance and cash sub-limit. |
 
-Questions Claude asked in rehearsal: fill in at rehearsal.
+**Rehearsal 1 (29 Oct): 15 min 48 s, far over the window. All six review checks passed.** No questions. It ends by asking "Want me to address B1…?": answer "No, leave the findings for the room." About 5 minutes went on a detour: `contract_diff.py` compares the draft with `main`, which already holds the frozen v1.0.0 contract, reports it as breaking, and Claude reworks the draft as an additive v1.1.0. Approvals to expect: `git ls-tree` and a `python3 -c` check. **Plan: kick off as normal, and at slide 15 show the fallback `git switch --detach stage/02-design`.** Look at the live `design-review.md` later if it has finished (rehearsal: 1 blocking, 3 non-blocking findings; the design-reviewer ran in the foreground, read-only).
 
 **Expected output:**
 - `specs/allowance-ledger/design.md`, with a REQ → component table, decisions that list the options rejected, and §3.2 "rules engine".
@@ -225,7 +225,7 @@ Use the sdd skill. Resolve the design-review findings marked blocking, then brea
 |---|---|
 | How to split the rules work, or whether to split a large task | One task for the overall allowance and one for the cash sub-limit. |
 
-Questions Claude asked in rehearsal: fill in at rehearsal.
+Questions Claude asked in rehearsal: not rehearsed headless (demo 3 writes to the live board). Use the fallback `make board-reset` if it stalls.
 
 **Expected output:**
 - The blocking findings resolved in `design.md`.
@@ -363,7 +363,7 @@ git switch --detach stage/06-testing
 claude
 ```
 
-**At `stage/06-testing`, `make check` is red, and only on the mutation gate.** That is the point of this act. It is green on `demo/act5-fix`. (The brief's stage table says green here; this build fails the mutation gate on purpose.)
+**At `stage/06-testing`, `make check` is red on the mutation gate, and also on freshness** (specs are stamped only at stage 07, so they show as "unverified"). After the fix, `make mutate` shows no unwaived survivors, but `make check` stays red on freshness. So the claim to make is "no unwaived survivors", not "make check goes green". `main` and `stage/07-docs` are fully green.
 
 **Prompt:**
 
@@ -373,7 +373,7 @@ Use the sdd skill. Run mutation testing on the rule modules. For each survivor, 
 
 Move on once the first mutation run has started.
 
-**Likely questions:** fill in at rehearsal.
+**Rehearsal 1 (29 Oct): 4 min 17 s, no questions, all review checks passed.** `make mutate` takes 2–4 s and shows the single survivor `x_cash_acceptance__mutmut_16`. Claude traced it to REQ-ALW-004 (a missing test, not an equivalent mutant), added a REQ-named test at exactly £12,000 in a NEW file (the name varies by run), changed nothing under `src/`, and built the evidence pack (six files; `review.json` is `{"pr": null}` at a detached tag). The new test is untracked: show it with `git status --short`, not `git diff`. Claude offers to commit; say no.
 
 **Expected output:**
 - **The survivor.** Exactly one: `>` changed to `>=` in `src/ledger/rules/cash_limit.py`, on the line `if total_cash > CASH_LIMIT_PENCE:`. It traces to REQ-ALW-004.
@@ -506,11 +506,11 @@ Fill in one column per rehearsal. If a step overruns its window, start it later.
 | Step | Window on the clock | Deck expects | Rehearsal 1 | Rehearsal 2 | Rehearsal 3 | Live |
 |---|---|---|---|---|---|---|
 | Demo 1: requirements | 0:10 → 0:17 | 2–4 min to write | 1:50 to questions + 3:49 to write | | | |
-| Demo 2: design and review | 0:19 → 0:24 | 5–8 min | | | | |
+| Demo 2: design and review | 0:19 → 0:24 | 5–8 min | 15:48 (all checks pass; show fallback at review) | | | |
 | Demo 3: tasks and board | 0:26 → 0:33 | 3–5 min | | | | |
 | Demo 4: parallel, A | 0:35 → 0:45 | 10–15 min | | | | |
 | Demo 4: parallel, B | 0:35 → 0:45 | 10–15 min | | | | |
-| Demo 5: mutation and evidence | 0:42 → 0:47 | 4–6 min | | | | |
+| Demo 5: mutation and evidence | 0:42 → 0:47 | 4–6 min | 4:17 | | | |
 | `make mutate` on `stage/06-testing` | — | under 2 min (brief) | | | | |
 | `make fresh` on `demo/act4-drift` | at 0:47 | a few seconds | | | | |
 | Demo 6: landing queue | 0:51 → 0:54 | 3–5 min | `make land` 0:49 | | | |

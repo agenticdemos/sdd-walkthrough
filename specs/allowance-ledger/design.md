@@ -20,7 +20,7 @@ A ledger service records ISA subscriptions per subscriber and tax year and decid
 
 ### 3.1 Tax year and age
 
-The tax year runs 6 April to 5 April and is named by its start year, so 6 April 2027 to 5 April 2028 is tax year 2027. Every subscription is filed under the tax year of the date it was received. Age is computed from the date of birth on the date the subscription is received, never on the day the request is processed.
+The tax year runs 6 April to 5 April and is labelled by the year it ends, so 6 April 2027 to 5 April 2028 is tax year 2028. Every subscription is filed under the tax year of the date it was received. Age is computed from the date of birth on the date the subscription is received, never on the day the request is processed.
 
 ### 3.2 Rules engine
 
@@ -41,7 +41,7 @@ A subscription whose subscriber has no date of birth cannot be checked against t
 | Entity | Fields | Notes |
 |---|---|---|
 | Subscriber | subscriber id, date of birth (may be missing) | Date of birth is only used to work out age on the received date |
-| Subscription | subscriber id, tax year (start year), amount accepted in pence, kind (cash or stocks) | Only accepted amounts are stored, so totals are a sum |
+| Subscription | subscriber id, tax year (end year), amount accepted in pence, kind (cash or stocks) | Only accepted amounts are stored, so totals are a sum |
 | Data-quality event | kind, detail | Written when input cannot be trusted, such as a missing date of birth |
 
 Money is integer pence everywhere: in the store, in the rules and on the wire.
@@ -52,8 +52,8 @@ Money is integer pence everywhere: in the store, in the rules and on the wire.
 |---|---|---|
 | REQ-ALW-001 | Ledger API, ledger store | Tax year from the received date (§3.1); every subscription stored against it |
 | REQ-ALW-002 | Ledger API, contract | Response carries remaining overall allowance and remaining cash sub-limit (null when none applies) |
-| REQ-ALW-003 | Rules engine | Cash rule returns no sub-limit for tax years before 2027 (§3.2) |
-| REQ-ALW-004 | Rules engine | Cash rule caps cash at £12,000 for under-65s from tax year 2027; excess rejected (§3.2) |
+| REQ-ALW-003 | Rules engine | Cash rule returns no sub-limit for tax years labelled before 2028, i.e. starting before 6 April 2027 (§3.2) |
+| REQ-ALW-004 | Rules engine | Cash rule caps cash at £12,000 for under-65s from tax year 2028 (2027/28); excess rejected (§3.2) |
 | REQ-ALW-005 | Rules engine | Overall rule caps at £20,000; excess rejected (§3.2) |
 | REQ-ALW-006 | Ledger API, ledger store | Missing date of birth refused; data-quality event recorded (§3.3) |
 | REQ-ALW-007 | (deferred) | Not designed while deferred; flexible withdrawals would add a withdrawal record to the store and an additive contract change |

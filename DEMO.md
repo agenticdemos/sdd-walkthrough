@@ -16,7 +16,7 @@ Session: 29 Oct 2026, 11:00, 60 minutes. Deck: *Spec-Driven Development, End to 
 | 3 · Tasks and board | 16 (0:26) | A · same branch | Parallel work, gates | 20 (0:33) | `make board-reset` |
 | 4 · Parallel | 21 (0:35) | A · `cd ../sdd-a`, B · `cd ../sdd-b` (both at `demo/parallel-start`: G1 passed) | Testing, evidence, mutation testing, demo 5 kick-off, freshness | 27 (0:45) | `demo/a-provider`, `demo/b-consumer` |
 | 5 · Mutation and evidence | 25 (0:42) | C · `git switch --detach stage/06-testing` | Freshness, demo 4 review | 28 (0:47), then `make fresh` on `demo/act4-drift` | `demo/act5-fix` |
-| 6 · Landing | 30 (0:51) | C · `scripts/reset_act6.sh` | How the queue works | 32 (0:54) | Merge-queue run in the browser; recorded queue log under `docs/demo/` |
+| 6 · Landing | 30 (0:51) | C · `scripts/reset_act6.sh` | How the queue works | 32 (0:54) | Explain from the slide: the live merge queue on `main` is not available today (see demo 6) |
 
 **Order on the clock:** 1 go → 1 review → 2 go → 2 review → 3 go → 3 review → 4 go → 5 go → 4 review → 5 review, then freshness → 6 go → 6 review → summary.
 
@@ -35,7 +35,7 @@ Session: 29 Oct 2026, 11:00, 60 minutes. Deck: *Spec-Driven Development, End to 
   - C in the repo root, kept spare.
 - [ ] Open three browser tabs:
   - the GitHub Project `SDD walkthrough`, filtered to this repo;
-  - the merge-queue run on `main` (the three act6 PRs, with PR 2 removed);
+  - the pull requests filtered to base `demo/trunk` (the three act6 PRs);
   - the repo's pull-request list.
 - [ ] Open `claude` once in the repo root and accept the workspace-trust prompt. Until you do, interactive sessions do not run project hooks, so the contracts guard would not fire in demo 4.
 - [ ] Claude permission mode: set it explicitly (Shift+Tab) to **accept edits**. Rehearsal 1 used `acceptEdits`. Recent versions start in auto mode by default.
@@ -467,11 +467,9 @@ gh pr list --label ejected
 git log --oneline demo/trunk -5      # if the local ref is stale: git fetch origin && git log --oneline origin/demo/trunk -5
 ```
 
-**Then in GitHub.** Switch to the browser tab showing the same three PRs through merge queue on `main`, run before the session, with PR 2 removed from the queue. Two practical points, if asked:
-- CI workflows must trigger on `merge_group` as well as `pull_request`, or the required check never reports.
-- Merge queue is only available on public repositories owned by an organisation, or on private organisation repositories on Enterprise Cloud. Check what your plan supports.
+**Then in GitHub (not live today).** GitHub does not yet run event-triggered CI in the new `agenticdemos` org: push and pull-request events start no runs, although a manual run passes. Merge queue needs that `check` status, so the live queue on `main` is out for this session and its ruleset is switched off. Explain it from the slide: the same three PRs would go into the queue in order, and PR 2 would be removed when its merge-group check failed. Two practical points, if asked:
 
-**Fallback:** the deck's fallback is the merge-queue run in the browser. The brief adds a recorded queue log under `docs/demo/` (`ls docs/demo/`), which the deck does not mention.
+**Fallback:** if `make land` fails, show the PRs' state in the browser and talk through the summary (rehearsal: PRs 1 and 3 landed, PR 2 ejected naming `test_REQ_ALW_003_date_in_2026_27_is_not_flagged`, 49 s). There is no recorded merge-queue log today.
 
 **Reset:** `scripts/reset_act6.sh`
 
@@ -485,11 +483,11 @@ git log --oneline demo/trunk -5      # if the local ref is stale: git fetch orig
 - **`… is already checked out at '../sdd-a'`.** Add `--detach` to the switch.
 - **Terminal B edited `contracts/` and the hook did not fire.** Say so and show `git diff contracts/`. Undo it with `git restore contracts/`, then use the `demo/b-consumer` fallback.
 - **One demo 4 side is still running at its review.** Show the other side and come back at the demo 5 review.
-- **The network or GitHub is down.** The board script's `--dry-run` prints the `gh` commands. The browser tabs already show the board and the merge-queue run, and the demo 6 log is under `docs/demo/`.
+- **The network or GitHub is down.** The board script's `--dry-run` prints the `gh` commands. The browser tabs already show the board and the PR list.
 - **You are running behind.** In this order:
   1. Combine the demo 4 and demo 5 reviews.
   2. Keep freshness, since it takes seconds.
-  3. Replace the live demo 6 run with the merge-queue tab and the recorded log.
+  3. Replace the live demo 6 run with the PR list and the rehearsal summary above.
 
 ## Optional: drift sweep (not scheduled)
 

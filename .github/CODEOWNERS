@@ -1,0 +1,11 @@
+# contracts/ needs both owners.
+#
+# person-a (ledger, provider) and person-b (report, consumer) are ROLES, not people.
+# This demo runs from a single GitHub login, so both roles map to the same account,
+# and the G0 approval is recorded as both role boxes ticked in the contract PR body
+# (see .github/pull_request_template.md). In a real team, put each owner's login here.
+
+# person-a
+/contracts/ @calmseas
+# person-b
+/contracts/ @calmseas

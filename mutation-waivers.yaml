@@ -1,0 +1,22 @@
+# Surviving mutants that a human has agreed to accept.
+#
+# The mutation gate (`make mutate`) fails on any survivor in mutation.targets
+# (see sdd.yaml) that is not listed here, whenever the spec covering that code
+# is at the evidentiary stop. The gate is zero UNWAIVED survivors.
+#
+# Entry format:
+#
+#   waivers:
+#     - mutant: ledger.rules.cash_limit.x_cash_acceptance__mutmut_7   # id as printed by `make mutate`
+#       reason: Equivalent mutant - both branches return the same value at every input.
+#       proposed_by: person-a      # who asked for the waiver (an agent may propose)
+#       reviewed_by: person-b      # MUST be a role in sdd.yaml mutation.approvers
+#
+# Rules:
+#   - reviewed_by must be one of the roles in sdd.yaml `mutation.approvers`
+#     (person-a, person-b); an entry with no reviewer, or any other value,
+#     does not count as a waiver.
+#   - Never change src/ to make a mutant disappear: kill it with a test, or waive it here.
+#
+# Empty until a human signs.
+waivers: []

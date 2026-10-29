@@ -1,0 +1,15 @@
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+
+# mutmut working tree
+mutants/
+
+# local SQLite stores
+*.db
+
+# generated evidence bundles (CI uploads them as artefacts); keep only the README
+evidence/*
+!evidence/README.md
+.hypothesis/

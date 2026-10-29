@@ -1,0 +1,43 @@
+name: ci
+
+on:
+  pull_request:
+  merge_group:                 # required, or the merge queue never sees the `check` status
+    types: [checks_requested]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check:
+    name: check                # the ruleset requires this status-check name
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0       # fresh.py and evidence.py read git history
+
+      - uses: astral-sh/setup-uv@v6
+
+      - name: Install locked dependencies
+        run: uv sync --locked
+
+      - name: make check
+        run: make check
+
+      - name: make evidence
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}   # evidence.py reads the PR via gh
+        run: make evidence
+
+      - name: Upload evidence
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-${{ github.sha }}
+          path: evidence/
+          if-no-files-found: error

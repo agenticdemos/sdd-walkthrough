@@ -1,0 +1,40 @@
+specs_dir: specs
+base_branch: main
+req_pattern: 'REQ-[A-Z]+-\d{3}'
+test_dirs: [tests]
+code_dirs: [src, tools]
+contracts_dir: contracts
+evidence_dir: evidence
+gates:                         # gate name -> shell command; dial.py runs the ones the strictest stop requires
+  unit: uv run pytest tests/unit -q
+  trace: python3 .claude/skills/sdd/scripts/trace.py
+  fresh: python3 .claude/skills/sdd/scripts/fresh.py
+  contract: make contract
+  mutation: make mutate
+  evidence: python3 .claude/skills/sdd/scripts/evidence.py allowance-ledger
+mutation:
+  targets: [src/ledger/rules/]
+  waivers: mutation-waivers.yaml
+  approvers: [person-a, person-b]
+board:
+  repo: agenticdemos/sdd-walkthrough
+  owner: agenticdemos
+  project: SDD walkthrough
+  tasks: specs/allowance-ledger/tasks.yaml
+  statuses: [Todo, In progress, In review, Landing, Done]
+  owners: [person-a, person-b]
+  gates: [G0, G1, G2, G3]
+  seed:                        # demo 3 review board (slide 20)
+    TASK-01: Done
+    TASK-02: Done
+    TASK-03: Done
+    TASK-04: Done
+    TASK-05: Landing
+    TASK-06: In review
+    TASK-07: In progress
+    TASK-08: In progress
+    TASK-09: Todo
+landing:
+  label: ready-to-land
+  ejected_label: ejected
+  check: make check

@@ -36,7 +36,7 @@ def run_check(root, cmd):
 
 
 def failing_tests(output):
-    return re.findall(r"^FAILED (\S+)", output, re.M)
+    return list(dict.fromkeys(re.findall(r"^FAILED (\S+)", output, re.M)))  # dedupe, keep order
 
 
 def task_of(pr):

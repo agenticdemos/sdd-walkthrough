@@ -6,18 +6,18 @@ def post(client, amount, received="2027-05-01", **over):
 
 
 def test_REQ_ALW_001_subscription_recorded_against_its_tax_year(client, store):
-    r = post(client, 100_000, received="2028-04-05")
-    assert r.status_code == 201 and r.json()["tax_year"] == 2027
-    assert store.totals("S-1", 2027) == (100_000, 100_000)
+    r = post(client, 100_000, received="2028-04-05")  # last day of 2027/28, labelled 2028
+    assert r.status_code == 201 and r.json()["tax_year"] == 2028
+    assert store.totals("S-1", 2028) == (100_000, 100_000)
 
 
 def test_REQ_ALW_002_response_carries_both_remainders(client):
     r = post(client, 300_000)
     assert r.json() == {
-        "subscriber_id": "S-1", "tax_year": 2027, "accepted_pence": 300_000, "rejected_pence": 0,
+        "subscriber_id": "S-1", "tax_year": 2028, "accepted_pence": 300_000, "rejected_pence": 0,
         "outcome": "accepted", "remaining_allowance_pence": 1_700_000, "remaining_cash_sub_limit_pence": 900_000,
     }
-    g = client.get("/subscribers/S-1/allowance", params={"tax_year": 2027})
+    g = client.get("/subscribers/S-1/allowance", params={"tax_year": 2028})
     assert g.status_code == 200 and g.json()["remaining_cash_sub_limit_pence"] == 900_000
 
 
@@ -43,8 +43,8 @@ def test_REQ_ALW_006_missing_date_of_birth_refused_with_event(client, store):
     r = post(client, 100_000, date_of_birth=None)
     assert r.status_code == 422 and r.json() == {"error": "date_of_birth_missing"}
     assert store.events()[0]["kind"] == "date_of_birth_missing"
-    assert store.totals("S-1", 2027) == (0, 0)
+    assert store.totals("S-1", 2028) == (0, 0)
 
 
 def test_REQ_ALW_002_unknown_subscriber_is_404(client):
-    assert client.get("/subscribers/nobody/allowance", params={"tax_year": 2027}).status_code == 404
+    assert client.get("/subscribers/nobody/allowance", params={"tax_year": 2028}).status_code == 404

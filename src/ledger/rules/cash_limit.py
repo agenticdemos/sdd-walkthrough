@@ -1,8 +1,8 @@
-"""Cash sub-limit (illustrative: £12,000 from the 2027/28 tax year, under-65s only)."""
+"""Cash sub-limit (illustrative: £12,000 from the 2027/28 tax year, labelled 2028, under-65s only)."""
 from typing import NamedTuple
 
 CASH_LIMIT_PENCE = 1_200_000  # REQ-ALW-004
-SUB_LIMIT_FIRST_YEAR = 2027  # REQ-ALW-003
+SUB_LIMIT_FIRST_YEAR = 2028  # REQ-ALW-003: 2027/28, labelled by the year it ends
 EXEMPT_AGE = 65  # REQ-ALW-004
 
 
@@ -13,7 +13,7 @@ class CashDecision(NamedTuple):
 
 
 def sub_limit_applies(tax_year: int, age: int) -> bool:
-    # REQ-ALW-003: no sub-limit in tax years starting before 6 April 2027
+    # REQ-ALW-003: no sub-limit in tax years starting before 6 April 2027 (labelled 2027 or earlier)
     return tax_year >= SUB_LIMIT_FIRST_YEAR and age < EXEMPT_AGE
 
 

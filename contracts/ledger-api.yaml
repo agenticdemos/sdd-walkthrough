@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: Allowance ledger API
-  version: 0.1.0
-  description: DRAFT for G0 review. Contract between the allowance ledger (provider) and the breach report (consumer). Money is integer pence throughout. All figures are illustrative.
+  version: 1.0.0
+  description: Contract between the allowance ledger (provider) and the breach report (consumer). Money is integer pence throughout. All figures are illustrative.
 servers:
   - url: http://localhost:8000
 paths:
@@ -183,6 +183,7 @@ components:
           minimum: 0
     Allowance:
       type: object
+      additionalProperties: false
       required:
         - subscriber_id
         - tax_year

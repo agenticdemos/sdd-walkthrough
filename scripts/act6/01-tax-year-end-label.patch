@@ -1,0 +1,257 @@
+From 2df1eb9476167912f28907634c3067d3acca4249 Mon Sep 17 00:00:00 2001
+From: Jessie McDonald <jessie.x.mac@gmail.com>
+Date: Thu, 29 Oct 2026 10:04:14 +0000
+Subject: [PATCH] Tax year labelled by end year
+
+tax_year() now returns the year the tax year ends: 6 April 2027 to
+5 April 2028 is 2028, not 2027. Every caller and test moves with it:
+the cash sub-limit's first year is now 2028 (2027/28), the allowance
+query takes age at 6 April of the year before the label, and the
+allowance-ledger spec says how tax years are labelled.
+
+Spec-REQ: REQ-ALW-001 REQ-ALW-003 REQ-ALW-004
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ specs/allowance-ledger/design.md        |  8 ++++----
+ specs/allowance-ledger/requirements.md  |  4 ++--
+ src/ledger/api.py                       |  3 ++-
+ src/ledger/rules/cash_limit.py          |  6 +++---
+ src/ledger/taxyear.py                   |  6 +++---
+ tests/unit/test_REQ_ALW_004_boundary.py |  4 ++--
+ tests/unit/test_ledger_api.py           | 14 +++++++-------
+ tests/unit/test_ledger_rules.py         | 18 +++++++++---------
+ tests/unit/test_ledger_taxyear.py       | 11 ++++++-----
+ 9 files changed, 38 insertions(+), 36 deletions(-)
+
+diff --git a/specs/allowance-ledger/design.md b/specs/allowance-ledger/design.md
+index 61723c9..fb78d0a 100644
+--- a/specs/allowance-ledger/design.md
++++ b/specs/allowance-ledger/design.md
+@@ -20,7 +20,7 @@ A ledger service records ISA subscriptions per subscriber and tax year and decid
+ 
+ ### 3.1 Tax year and age
+ 
+-The tax year runs 6 April to 5 April and is named by its start year, so 6 April 2027 to 5 April 2028 is tax year 2027. Every subscription is filed under the tax year of the date it was received. Age is computed from the date of birth on the date the subscription is received, never on the day the request is processed.
++The tax year runs 6 April to 5 April and is labelled by the year it ends, so 6 April 2027 to 5 April 2028 is tax year 2028. Every subscription is filed under the tax year of the date it was received. Age is computed from the date of birth on the date the subscription is received, never on the day the request is processed.
+ 
+ ### 3.2 Rules engine
+ 
+@@ -41,7 +41,7 @@ A subscription whose subscriber has no date of birth cannot be checked against t
+ | Entity | Fields | Notes |
+ |---|---|---|
+ | Subscriber | subscriber id, date of birth (may be missing) | Date of birth is only used to work out age on the received date |
+-| Subscription | subscriber id, tax year (start year), amount accepted in pence, kind (cash or stocks) | Only accepted amounts are stored, so totals are a sum |
++| Subscription | subscriber id, tax year (end year), amount accepted in pence, kind (cash or stocks) | Only accepted amounts are stored, so totals are a sum |
+ | Data-quality event | kind, detail | Written when input cannot be trusted, such as a missing date of birth |
+ 
+ Money is integer pence everywhere: in the store, in the rules and on the wire.
+@@ -52,8 +52,8 @@ Money is integer pence everywhere: in the store, in the rules and on the wire.
+ |---|---|---|
+ | REQ-ALW-001 | Ledger API, ledger store | Tax year from the received date (§3.1); every subscription stored against it |
+ | REQ-ALW-002 | Ledger API, contract | Response carries remaining overall allowance and remaining cash sub-limit (null when none applies) |
+-| REQ-ALW-003 | Rules engine | Cash rule returns no sub-limit for tax years before 2027 (§3.2) |
+-| REQ-ALW-004 | Rules engine | Cash rule caps cash at £12,000 for under-65s from tax year 2027; excess rejected (§3.2) |
++| REQ-ALW-003 | Rules engine | Cash rule returns no sub-limit for tax years labelled before 2028, i.e. starting before 6 April 2027 (§3.2) |
++| REQ-ALW-004 | Rules engine | Cash rule caps cash at £12,000 for under-65s from tax year 2028 (2027/28); excess rejected (§3.2) |
+ | REQ-ALW-005 | Rules engine | Overall rule caps at £20,000; excess rejected (§3.2) |
+ | REQ-ALW-006 | Ledger API, ledger store | Missing date of birth refused; data-quality event recorded (§3.3) |
+ | REQ-ALW-007 | (deferred) | Not designed while deferred; flexible withdrawals would add a withdrawal record to the store and an additive contract change |
+diff --git a/specs/allowance-ledger/requirements.md b/specs/allowance-ledger/requirements.md
+index 3601292..8b35743 100644
+--- a/specs/allowance-ledger/requirements.md
++++ b/specs/allowance-ledger/requirements.md
+@@ -14,7 +14,7 @@ owner: person-a
+ 
+ ## Definitions
+ 
+-- **Tax year:** 6 April to 5 April. A tax year is named by the year it starts in (6 April 2027 to 5 April 2028 is tax year 2027).
++- **Tax year:** 6 April to 5 April. A tax year is labelled by the year it ends in (6 April 2027 to 5 April 2028 is tax year 2028). Dates in the requirements below are unaffected by the label.
+ - **Age:** the subscriber's age on the date the subscription is received.
+ - **Amounts:** whole pence, as integers. No fractions of a penny.
+ - **Excess:** the part of a subscription above a limit. Only the excess is rejected; the rest of the subscription is accepted.
+@@ -39,7 +39,7 @@ owner: person-a
+ 
+ 4. **REQ-ALW-004** (must-not): WHILE the tax year starts on or after 6 April 2027, IF a cash subscription would take a subscriber under 65 above £12,000 of cash subscriptions in that tax year, THEN the ledger shall accept only the remaining cash sub-limit and reject the excess.
+    - source: [rule reference — illustrative]
+-   - effective: 6 April 2027 (tax year 2027 onwards)
++   - effective: 6 April 2027 (tax year 2027/28, labelled 2028, onwards)
+    - evidence: REQ-named tests; no unwaived surviving mutants in `src/ledger/rules/`; reviewer ≠ author
+    - approver: [product owner]
+ 
+diff --git a/src/ledger/api.py b/src/ledger/api.py
+index f9fff4a..73988be 100644
+--- a/src/ledger/api.py
++++ b/src/ledger/api.py
+@@ -78,7 +78,8 @@ def create_app(store: Store | None = None) -> FastAPI:
+         if dob is None:
+             return JSONResponse(status_code=404, content={"error": "subscriber_not_found"})
+         # Age is taken at the start of the tax year when no subscription date is given.
+-        age = age_on(dob, date(tax_year, 4, 6))
++        # tax_year is the year the tax year ends, so it starts on 6 April of the year before.
++        age = age_on(dob, date(tax_year - 1, 4, 6))
+         overall_left, cash_left = _remaining(store, subscriber_id, tax_year, age)
+         return {
+             "subscriber_id": subscriber_id, "tax_year": tax_year,
+diff --git a/src/ledger/rules/cash_limit.py b/src/ledger/rules/cash_limit.py
+index a04acdc..d4427fd 100644
+--- a/src/ledger/rules/cash_limit.py
++++ b/src/ledger/rules/cash_limit.py
+@@ -1,8 +1,8 @@
+-"""Cash sub-limit (illustrative: £12,000 from the 2027/28 tax year, under-65s only)."""
++"""Cash sub-limit (illustrative: £12,000 from the 2027/28 tax year, labelled 2028, under-65s only)."""
+ from typing import NamedTuple
+ 
+ CASH_LIMIT_PENCE = 1_200_000  # REQ-ALW-004
+-SUB_LIMIT_FIRST_YEAR = 2027  # REQ-ALW-003
++SUB_LIMIT_FIRST_YEAR = 2028  # REQ-ALW-003: 2027/28, labelled by the year it ends
+ EXEMPT_AGE = 65  # REQ-ALW-004
+ 
+ 
+@@ -13,7 +13,7 @@ class CashDecision(NamedTuple):
+ 
+ 
+ def sub_limit_applies(tax_year: int, age: int) -> bool:
+-    # REQ-ALW-003: no sub-limit in tax years starting before 6 April 2027
++    # REQ-ALW-003: no sub-limit in tax years starting before 6 April 2027 (labelled 2027 or earlier)
+     return tax_year >= SUB_LIMIT_FIRST_YEAR and age < EXEMPT_AGE
+ 
+ 
+diff --git a/src/ledger/taxyear.py b/src/ledger/taxyear.py
+index 7212900..758be47 100644
+--- a/src/ledger/taxyear.py
++++ b/src/ledger/taxyear.py
+@@ -1,11 +1,11 @@
+-"""UK tax year arithmetic. A tax year runs 6 April to 5 April and is named by its START year."""
++"""UK tax year arithmetic. A tax year runs 6 April to 5 April and is named by the year it ENDS."""
+ from datetime import date
+ 
+ 
+ def tax_year(d: date) -> int:
+-    """Start year of the tax year containing d: 6 Apr 2027 to 5 Apr 2028 is 2027."""
++    """End year of the tax year containing d: 6 Apr 2027 to 5 Apr 2028 is 2028."""
+     # REQ-ALW-001
+-    return d.year if (d.month, d.day) >= (4, 6) else d.year - 1
++    return d.year + 1 if (d.month, d.day) >= (4, 6) else d.year
+ 
+ 
+ def age_on(dob: date, on: date) -> int:
+diff --git a/tests/unit/test_REQ_ALW_004_boundary.py b/tests/unit/test_REQ_ALW_004_boundary.py
+index af491b5..27af0f5 100644
+--- a/tests/unit/test_REQ_ALW_004_boundary.py
++++ b/tests/unit/test_REQ_ALW_004_boundary.py
+@@ -3,5 +3,5 @@ from ledger.rules.cash_limit import CashDecision, cash_acceptance
+ 
+ 
+ def test_REQ_ALW_004_exactly_at_cash_limit_is_accepted():
+-    assert cash_acceptance(0, 1_200_000, 2027, 30) == CashDecision(1_200_000, 0, False)
+-    assert cash_acceptance(700_000, 500_000, 2027, 30) == CashDecision(500_000, 0, False)
++    assert cash_acceptance(0, 1_200_000, 2028, 30) == CashDecision(1_200_000, 0, False)
++    assert cash_acceptance(700_000, 500_000, 2028, 30) == CashDecision(500_000, 0, False)
+diff --git a/tests/unit/test_ledger_api.py b/tests/unit/test_ledger_api.py
+index 874a4d4..0169f2b 100644
+--- a/tests/unit/test_ledger_api.py
++++ b/tests/unit/test_ledger_api.py
+@@ -6,18 +6,18 @@ def post(client, amount, received="2027-05-01", **over):
+ 
+ 
+ def test_REQ_ALW_001_subscription_recorded_against_its_tax_year(client, store):
+-    r = post(client, 100_000, received="2028-04-05")
+-    assert r.status_code == 201 and r.json()["tax_year"] == 2027
+-    assert store.totals("S-1", 2027) == (100_000, 100_000)
++    r = post(client, 100_000, received="2028-04-05")  # last day of 2027/28, labelled 2028
++    assert r.status_code == 201 and r.json()["tax_year"] == 2028
++    assert store.totals("S-1", 2028) == (100_000, 100_000)
+ 
+ 
+ def test_REQ_ALW_002_response_carries_both_remainders(client):
+     r = post(client, 300_000)
+     assert r.json() == {
+-        "subscriber_id": "S-1", "tax_year": 2027, "accepted_pence": 300_000, "rejected_pence": 0,
++        "subscriber_id": "S-1", "tax_year": 2028, "accepted_pence": 300_000, "rejected_pence": 0,
+         "outcome": "accepted", "remaining_allowance_pence": 1_700_000, "remaining_cash_sub_limit_pence": 900_000,
+     }
+-    g = client.get("/subscribers/S-1/allowance", params={"tax_year": 2027})
++    g = client.get("/subscribers/S-1/allowance", params={"tax_year": 2028})
+     assert g.status_code == 200 and g.json()["remaining_cash_sub_limit_pence"] == 900_000
+ 
+ 
+@@ -43,8 +43,8 @@ def test_REQ_ALW_006_missing_date_of_birth_refused_with_event(client, store):
+     r = post(client, 100_000, date_of_birth=None)
+     assert r.status_code == 422 and r.json() == {"error": "date_of_birth_missing"}
+     assert store.events()[0]["kind"] == "date_of_birth_missing"
+-    assert store.totals("S-1", 2027) == (0, 0)
++    assert store.totals("S-1", 2028) == (0, 0)
+ 
+ 
+ def test_REQ_ALW_002_unknown_subscriber_is_404(client):
+-    assert client.get("/subscribers/nobody/allowance", params={"tax_year": 2027}).status_code == 404
++    assert client.get("/subscribers/nobody/allowance", params={"tax_year": 2028}).status_code == 404
+diff --git a/tests/unit/test_ledger_rules.py b/tests/unit/test_ledger_rules.py
+index dd0d5c2..6e5cc34 100644
+--- a/tests/unit/test_ledger_rules.py
++++ b/tests/unit/test_ledger_rules.py
+@@ -6,29 +6,29 @@ POUND = 100
+ 
+ 
+ def test_REQ_ALW_003_no_cash_sub_limit_before_2027_28():
+-    assert cash_acceptance(0, 13_000 * POUND, 2026, 30) == CashDecision(13_000 * POUND, 0, False)
+-    assert not sub_limit_applies(2026, 30)
+-    assert sub_limit_applies(2027, 30)
++    assert cash_acceptance(0, 13_000 * POUND, 2027, 30) == CashDecision(13_000 * POUND, 0, False)
++    assert not sub_limit_applies(2027, 30)
++    assert sub_limit_applies(2028, 30)
+ 
+ 
+ def test_REQ_ALW_004_under_cash_limit_is_accepted():
+-    assert cash_acceptance(0, 11_000 * POUND, 2027, 30) == CashDecision(11_000 * POUND, 0, False)
++    assert cash_acceptance(0, 11_000 * POUND, 2028, 30) == CashDecision(11_000 * POUND, 0, False)
+ 
+ 
+ def test_REQ_ALW_004_over_cash_limit_rejects_the_excess():
+-    assert cash_acceptance(0, 13_000 * POUND, 2027, 30) == CashDecision(12_000 * POUND, 1_000 * POUND, True)
+-    assert cash_acceptance(5_000 * POUND, 8_000 * POUND, 2027, 30) == CashDecision(
++    assert cash_acceptance(0, 13_000 * POUND, 2028, 30) == CashDecision(12_000 * POUND, 1_000 * POUND, True)
++    assert cash_acceptance(5_000 * POUND, 8_000 * POUND, 2028, 30) == CashDecision(
+         7_000 * POUND, 1_000 * POUND, True
+     )
+ 
+ 
+ def test_REQ_ALW_004_sub_limit_already_used_rejects_everything():
+-    assert cash_acceptance(12_000 * POUND, 1 * POUND, 2027, 30) == CashDecision(0, 1 * POUND, True)
++    assert cash_acceptance(12_000 * POUND, 1 * POUND, 2028, 30) == CashDecision(0, 1 * POUND, True)
+ 
+ 
+ def test_REQ_ALW_004_over_65_is_exempt():
+-    assert cash_acceptance(0, 13_000 * POUND, 2027, 65) == CashDecision(13_000 * POUND, 0, False)
+-    assert sub_limit_applies(2027, 64)
++    assert cash_acceptance(0, 13_000 * POUND, 2028, 65) == CashDecision(13_000 * POUND, 0, False)
++    assert sub_limit_applies(2028, 64)
+ 
+ 
+ def test_REQ_ALW_005_overall_limit_rejects_the_excess():
+diff --git a/tests/unit/test_ledger_taxyear.py b/tests/unit/test_ledger_taxyear.py
+index fc4a309..6eb2a31 100644
+--- a/tests/unit/test_ledger_taxyear.py
++++ b/tests/unit/test_ledger_taxyear.py
+@@ -4,11 +4,12 @@ from ledger.taxyear import age_on, tax_year
+ 
+ 
+ def test_REQ_ALW_001_tax_year_starts_on_6_april():
+-    assert tax_year(date(2027, 4, 6)) == 2027
+-    assert tax_year(date(2027, 4, 5)) == 2026
+-    assert tax_year(date(2028, 4, 5)) == 2027
+-    assert tax_year(date(2027, 12, 31)) == 2027
+-    assert tax_year(date(2028, 1, 1)) == 2027
++    # A tax year is labelled by the year it ends: 6 Apr 2027 to 5 Apr 2028 is 2028.
++    assert tax_year(date(2027, 4, 6)) == 2028
++    assert tax_year(date(2027, 4, 5)) == 2027
++    assert tax_year(date(2028, 4, 5)) == 2028
++    assert tax_year(date(2027, 12, 31)) == 2028
++    assert tax_year(date(2028, 1, 1)) == 2028
+ 
+ 
+ def test_REQ_ALW_004_age_is_taken_on_the_date_received():
+-- 
+2.39.5 (Apple Git-154)
+

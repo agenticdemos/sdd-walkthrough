@@ -1,0 +1,75 @@
+From 5151fca9b311ec8307edaafa09d2deb5d52d82fc Mon Sep 17 00:00:00 2001
+From: Jessie McDonald <jessie.x.mac@gmail.com>
+Date: Thu, 29 Oct 2026 10:04:59 +0000
+Subject: [PATCH] Sub-limit flag for the breach report
+
+New report.flags.sub_limit_applies(d): true when a subscription received
+on d falls in a tax year with a cash sub-limit (tax year 2027 onwards,
+named by its start year). Tests cover both sides of 6 April 2027, and
+the breach-report spec notes the flag.
+
+Spec-REQ: REQ-ALW-003
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ specs/breach-report/requirements.md |  4 ++++
+ src/report/flags.py                 | 13 +++++++++++++
+ tests/unit/test_report_flags.py     | 14 ++++++++++++++
+ 3 files changed, 31 insertions(+)
+ create mode 100644 src/report/flags.py
+ create mode 100644 tests/unit/test_report_flags.py
+
+diff --git a/specs/breach-report/requirements.md b/specs/breach-report/requirements.md
+index 2a9eda9..09b8000 100644
+--- a/specs/breach-report/requirements.md
++++ b/specs/breach-report/requirements.md
+@@ -17,3 +17,7 @@ owner: person-b
+ 1. **REQ-RPT-001** (event): WHEN the daily report runs, the report job shall list every subscriber whose remaining overall allowance is below £[1,000].
+ 
+ 2. **REQ-RPT-002** (unwanted): IF the ledger API is unavailable, THEN the report job shall exit non-zero and write no partial report.
++
++## Notes
++
++- **Sub-limit flag.** `src/report/flags.py` flags a subscription received in a tax year where the ledger’s cash sub-limit applies: tax year 2027 onwards, a tax year being named by the year it starts in (2027 is 6 April 2027 to 5 April 2028). It follows the allowance-ledger spec’s cash sub-limit requirement and adds no requirement of its own.
+diff --git a/src/report/flags.py b/src/report/flags.py
+new file mode 100644
+index 0000000..9343752
+--- /dev/null
++++ b/src/report/flags.py
+@@ -0,0 +1,13 @@
++"""Per-subscription flags for the breach report. All dates illustrative."""
++from datetime import date
++
++from ledger.taxyear import tax_year
++
++
++def sub_limit_applies(d: date) -> bool:
++    """True when the cash sub-limit applies to a subscription received on d.
++
++    Tax years are named by the year they start in, so 2027 is 6 April 2027 to 5 April 2028,
++    the first tax year with a cash sub-limit."""
++    # REQ-ALW-003: no sub-limit in tax years starting before 6 April 2027
++    return tax_year(d) >= 2027
+diff --git a/tests/unit/test_report_flags.py b/tests/unit/test_report_flags.py
+new file mode 100644
+index 0000000..901ba4d
+--- /dev/null
++++ b/tests/unit/test_report_flags.py
+@@ -0,0 +1,14 @@
++"""Breach report sub-limit flag. Dates are illustrative."""
++from datetime import date
++
++from report.flags import sub_limit_applies
++
++
++def test_REQ_ALW_003_date_in_2026_27_is_not_flagged():
++    assert not sub_limit_applies(date(2026, 12, 1))
++    assert not sub_limit_applies(date(2027, 4, 5))
++
++
++def test_REQ_ALW_003_date_in_2027_28_is_flagged():
++    assert sub_limit_applies(date(2027, 4, 6))
++    assert sub_limit_applies(date(2027, 5, 1))
+-- 
+2.39.5 (Apple Git-154)
+

@@ -78,7 +78,23 @@ Use the sdd skill. Read docs/brief.md. First tell me which stop on the dial this
 | The approver | The product owner. |
 | Whether the figures are real | All figures are illustrative. |
 
-**Questions Claude asked in rehearsal 1 (29 Oct, 110 s to the questions, then 229 s to write):** it named the stop as **evidentiary** first, then asked whether to reject the whole subscription or only the excess; which date sets the tax year; whether backdated subscriptions are allowed; the exact year the £12,000 cash limit starts; whether the limits are fixed or configurable per year; which date is used for age 65 and whether the boundary is strict; and how cash and stocks subscriptions are told apart. The answer sheet above covers every one of these. For anything else, answer "use your judgement and list it as an open question". Rehearsal 1 wrote 12 REQs, not 7, with source, evidence and approver lines and REQ-012 deferred. Fallback `stage/01-requirements` has the brief's 7.
+**Questions Claude asked in rehearsal 1 (29 Oct): 14 questions, 110 s to ask them, then 229 s to write.** It named the stop as **evidentiary** first. The sheet above covers whole vs excess rejection, the sub-limit start year, the age date, flexible ISA and pence. Answers for the rest:
+
+| Question | Answer to give |
+|---|---|
+| Which date sets the tax year? | The UK tax year (6 April to 5 April) in which the subscription is received. |
+| Backdated subscriptions? | Each one is judged under the rules of its own tax year. |
+| Are limits fixed or configurable per year? | Fixed for now: £20,000 overall, £12,000 cash from 2027/28. |
+| How do we know cash from stocks? | Each subscription is tagged cash or stocks. |
+| What does "remaining" return? | Both remaining figures, after this subscription's decision. |
+| Are rejections recorded? | Record every subscription with its decision. |
+| Customer id and aggregation? | One subscriber id; all of a subscriber's ISAs count together. |
+| Exactly on a limit? | Accepted: exactly £12,000 of cash is allowed. |
+| Missing date of birth? | Refuse any subscription and emit a data-quality event. |
+| Concurrency? | Out of scope for requirements; the design handles it. |
+| The "close to the limit" threshold? | The report team owns it: £1,000 for now. |
+
+Anything else: "use your judgement and record it as an open question in the spec". A live run writes about 12 REQs, not the brief's 7, and numbers flexible ISA last (deferred). Slide 11's "REQ-ALW-007 deferred" check holds on the fallback `stage/01-requirements`, not on the live output.
 
 **Expected output:** `specs/allowance-ledger/requirements.md`, numbered from REQ-ALW-001, with:
 - one EARS pattern per requirement;
@@ -493,7 +509,7 @@ Fill in one column per rehearsal. If a step overruns its window, start it later.
 
 | Demo | Rehearsal 1 | Rehearsal 2 | Rehearsal 3 |
 |---|---|---|---|
-| 1 | whole vs excess rejection; tax-year date; backdating; sub-limit start year; configurable limits; age-65 date and boundary; cash vs stocks | | |
+| 1 | 14 questions (see demo 1); 12 REQs written | | |
 | 2 | | | |
 | 3 | | | |
 | 4 A | | | |

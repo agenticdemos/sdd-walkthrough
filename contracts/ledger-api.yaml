@@ -1,0 +1,211 @@
+openapi: 3.1.0
+info:
+  title: Allowance ledger API
+  version: 0.1.0
+  description: DRAFT for G0 review. Contract between the allowance ledger (provider) and the breach report (consumer). Money is integer pence throughout. All figures are illustrative.
+servers:
+  - url: http://localhost:8000
+paths:
+  /subscriptions:
+    post:
+      operationId: recordSubscription
+      summary: Record a subscription and return what was accepted (REQ-ALW-001 to REQ-ALW-006)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubscriptionRequest"
+      responses:
+        "201":
+          description: Subscription recorded, in full or in part
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionResult"
+              examples:
+                partial:
+                  summary: Cash above the sub-limit is rejected
+                  value:
+                    subscriber_id: S-0001
+                    tax_year: 2027
+                    accepted_pence: 1200000
+                    rejected_pence: 100000
+                    outcome: partially_accepted
+                    remaining_allowance_pence: 800000
+                    remaining_cash_sub_limit_pence: 0
+        "400":
+          description: Body is not valid JSON
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Refusal"
+        "422":
+          description: Refused. Missing date of birth gives error date_of_birth_missing; other validation failures give detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Refusal"
+              examples:
+                missing_dob:
+                  summary: Date of birth missing
+                  value:
+                    error: date_of_birth_missing
+  /subscribers/{subscriber_id}/allowance:
+    get:
+      operationId: getAllowance
+      summary: Remaining allowance and cash sub-limit for a tax year (REQ-ALW-002)
+      parameters:
+        - name: subscriber_id
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 64
+        - name: tax_year
+          in: query
+          required: true
+          description: Start year of the UK tax year (2027 means 6 April 2027 to 5 April 2028)
+          schema:
+            type: integer
+            minimum: 2000
+            maximum: 2100
+      responses:
+        "200":
+          description: Remaining allowance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Allowance"
+              examples:
+                low:
+                  summary: Subscriber close to the overall limit
+                  value:
+                    subscriber_id: S-0001
+                    tax_year: 2027
+                    remaining_allowance_pence: 50000
+                    remaining_cash_sub_limit_pence: 0
+                healthy:
+                  summary: Subscriber with plenty of allowance left
+                  value:
+                    subscriber_id: S-0002
+                    tax_year: 2027
+                    remaining_allowance_pence: 1500000
+                    remaining_cash_sub_limit_pence: 700000
+        "404":
+          description: Unknown subscriber
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Refusal"
+              examples:
+                unknown:
+                  summary: No such subscriber
+                  value:
+                    error: subscriber_not_found
+        "422":
+          description: Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Refusal"
+components:
+  schemas:
+    SubscriptionRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - subscriber_id
+        - date_of_birth
+        - amount_pence
+        - kind
+        - received
+      properties:
+        subscriber_id:
+          type: string
+          minLength: 1
+          maxLength: 64
+        date_of_birth:
+          description: Null when the source system has no date of birth (REQ-ALW-006)
+          type:
+            - string
+            - "null"
+          format: date
+        amount_pence:
+          type: integer
+          minimum: 1
+          maximum: 100000000
+        kind:
+          type: string
+          enum:
+            - cash
+            - stocks
+        received:
+          type: string
+          format: date
+    SubscriptionResult:
+      type: object
+      required:
+        - subscriber_id
+        - tax_year
+        - accepted_pence
+        - rejected_pence
+        - outcome
+        - remaining_allowance_pence
+        - remaining_cash_sub_limit_pence
+      properties:
+        subscriber_id:
+          type: string
+        tax_year:
+          description: Start year of the UK tax year the subscription was received in
+          type: integer
+        accepted_pence:
+          type: integer
+          minimum: 0
+        rejected_pence:
+          type: integer
+          minimum: 0
+        outcome:
+          type: string
+          enum:
+            - accepted
+            - partially_accepted
+            - rejected
+        remaining_allowance_pence:
+          type: integer
+          minimum: 0
+        remaining_cash_sub_limit_pence:
+          description: Null when no cash sub-limit applies (REQ-ALW-003)
+          type:
+            - integer
+            - "null"
+          minimum: 0
+    Allowance:
+      type: object
+      required:
+        - subscriber_id
+        - tax_year
+        - remaining_allowance_pence
+        - remaining_cash_sub_limit_pence
+      properties:
+        subscriber_id:
+          type: string
+        tax_year:
+          type: integer
+        remaining_allowance_pence:
+          type: integer
+          minimum: 0
+        remaining_cash_sub_limit_pence:
+          description: Null when no cash sub-limit applies (REQ-ALW-003)
+          type:
+            - integer
+            - "null"
+          minimum: 0
+    Refusal:
+      type: object
+      properties:
+        error:
+          type: string
+        detail:
+          description: Framework validation detail (any shape)

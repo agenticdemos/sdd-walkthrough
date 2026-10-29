@@ -78,7 +78,8 @@ def create_app(store: Store | None = None) -> FastAPI:
         if dob is None:
             return JSONResponse(status_code=404, content={"error": "subscriber_not_found"})
         # Age is taken at the start of the tax year when no subscription date is given.
-        age = age_on(dob, date(tax_year, 4, 6))
+        # tax_year is the year the tax year ends, so it starts on 6 April of the year before.
+        age = age_on(dob, date(tax_year - 1, 4, 6))
         overall_left, cash_left = _remaining(store, subscriber_id, tax_year, age)
         return {
             "subscriber_id": subscriber_id, "tax_year": tax_year,

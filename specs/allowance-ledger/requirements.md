@@ -14,7 +14,7 @@ owner: person-a
 
 ## Definitions
 
-- **Tax year:** 6 April to 5 April. A tax year is named by the year it starts in (6 April 2027 to 5 April 2028 is tax year 2027).
+- **Tax year:** 6 April to 5 April. A tax year is labelled by the year it ends in (6 April 2027 to 5 April 2028 is tax year 2028). Dates in the requirements below are unaffected by the label.
 - **Age:** the subscriber's age on the date the subscription is received.
 - **Amounts:** whole pence, as integers. No fractions of a penny.
 - **Excess:** the part of a subscription above a limit. Only the excess is rejected; the rest of the subscription is accepted.
@@ -39,7 +39,7 @@ owner: person-a
 
 4. **REQ-ALW-004** (must-not): WHILE the tax year starts on or after 6 April 2027, IF a cash subscription would take a subscriber under 65 above £12,000 of cash subscriptions in that tax year, THEN the ledger shall accept only the remaining cash sub-limit and reject the excess.
    - source: [rule reference — illustrative]
-   - effective: 6 April 2027 (tax year 2027 onwards)
+   - effective: 6 April 2027 (tax year 2027/28, labelled 2028, onwards)
    - evidence: REQ-named tests; no unwaived surviving mutants in `src/ledger/rules/`; reviewer ≠ author
    - approver: [product owner]
 

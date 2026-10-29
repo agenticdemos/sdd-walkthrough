@@ -85,6 +85,11 @@ def create_app(store: Store | None = None) -> FastAPI:
             "remaining_allowance_pence": overall_left, "remaining_cash_sub_limit_pence": cash_left,
         }
 
+    @app.get("/subscribers/{subscriber_id}/events")
+    def subscriber_events(subscriber_id: str) -> list:
+        """Data-quality events for one subscriber (added without a spec change)."""
+        return [e for e in store.events() if subscriber_id in str(e)]
+
     return app
 
 

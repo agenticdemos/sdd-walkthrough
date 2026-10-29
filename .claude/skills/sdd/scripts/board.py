@@ -6,7 +6,7 @@
   board.py reset [--dry-run]           every task back to sdd.yaml board.seed
 Every name comes from sdd.yaml `board:`; every gh call goes through _sdd.gh.
 """
-import argparse, json, re, sys
+import argparse, json, re, sys, time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -107,7 +107,16 @@ class Board:
         return {"number": num, "url": url or f"https://github.com/{self.repo}/issues/{num}", "title": title}, True
 
     def add_item(self, proj, url):
-        out = self.gh("project", "item-add", proj["number"], "--owner", self.owner, "--url", url, "--format", "json")
+        args = ("project", "item-add", proj["number"], "--owner", self.owner, "--url", url, "--format", "json")
+        try:
+            out = self.gh(*args)
+        except _sdd.CommandError as e:
+            # GitHub can auto-add a sub-issue whose parent is on the board; adding it again then races.
+            if "already exists" not in str(e):
+                raise
+            print("  item already on the board (added with its parent); re-reading it")
+            time.sleep(2)
+            out = self.gh(*args)
         return _json(out, {}).get("id", "<item>")
 
     def set_field(self, proj, fields, item, name, value):

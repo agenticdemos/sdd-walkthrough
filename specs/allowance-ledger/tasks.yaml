@@ -1,0 +1,59 @@
+# Tasks for allowance-ledger, imported to the board by the sdd skill (board.py bootstrap).
+# After stage/03-tasks this file is the import source only: status lives on the board, never here.
+# Figures are illustrative.
+spec: allowance-ledger
+tasks:
+  - id: TASK-01
+    title: "Tax-year function"
+    reqs: [REQ-ALW-001]
+    design: "§3.1 tax year and age"
+    area: src/ledger/taxyear.py
+    done: "REQ tests green for tax-year boundaries on 5 and 6 April"
+  - id: TASK-02
+    title: "Overall limit"
+    reqs: [REQ-ALW-005]
+    design: "§3.2 rules engine"
+    area: src/ledger/rules/overall.py
+    done: "REQ tests green, no unwaived survivors"
+  - id: TASK-03
+    title: "Date-of-birth check"
+    reqs: [REQ-ALW-006]
+    design: "§3.3 refusals and data quality"
+    area: src/ledger/api.py
+    done: "REQ tests green; refusal writes a data-quality event"
+  - id: TASK-04
+    title: "Allowance response"
+    reqs: [REQ-ALW-002]
+    design: "§6 the seam"
+    area: src/ledger/api.py
+    done: "REQ tests green; responses match contract v1"
+  - id: TASK-05
+    title: "Ledger schema"
+    reqs: [REQ-ALW-001, REQ-ALW-002]
+    design: "§4 data model"
+    area: src/ledger/store.py
+    done: "REQ tests green; totals per subscriber and tax year"
+  - id: TASK-06
+    title: "Contract v1"
+    reqs: [REQ-ALW-002, REQ-RPT-001]
+    design: "§6 the seam"
+    area: contracts/ledger-api.yaml
+    done: "Both owners approve the contract PR; info.version set"
+  - id: TASK-07
+    title: "Cash sub-limit"
+    reqs: [REQ-ALW-003, REQ-ALW-004]
+    design: "§3.2 rules engine"
+    area: src/ledger/rules/
+    done: "REQ tests green, no unwaived survivors"
+  - id: TASK-08
+    title: "Report client"
+    reqs: [REQ-RPT-001]
+    design: "§6 the seam"
+    area: src/report/client.py
+    done: "Consumer contract tests green against the v1 mock"
+  - id: TASK-09
+    title: "Breach report job"
+    reqs: [REQ-RPT-001, REQ-RPT-002]
+    design: "§5 REQ to component"
+    area: src/report/job.py
+    done: "REQ tests green; no partial report when the ledger is down"

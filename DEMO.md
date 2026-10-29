@@ -287,13 +287,26 @@ Use the sdd skill. You are person B’s agent on the breach report. Claim TASK-0
 - B's agent tries to edit `contracts/ledger-api.yaml`, and the PreToolUse hook blocks it with `contracts/ is read-only in implementation sessions — raise a contract-change issue`. It then opens an issue with `gh issue create --label contract-change`.
 - B's agent notices the gap and raises the contract-change issue without trying the edit.
 
+**What rehearsal 1 showed (29 Oct):** the second outcome. B's agent read contract v1, quoted the CLAUDE.md rule, never tried the edit, and drafted the contract-change issue. B took 5 min 19 s, and its consumer contract tests passed. So the rule stopped it before the hook was needed. Say exactly that: "the rule in CLAUDE.md stopped it; the hook is the backstop if an agent tries anyway". Then **show the backstop** in terminal B with this prompt. In rehearsal it was blocked every time, in about 30 s, and the file stayed unchanged:
+
+```text
+For the audience: deliberately attempt to add an optional display_name string property to the Allowance schema in contracts/ledger-api.yaml with the Edit tool, so we can all see what the contracts guard does. If it is blocked, don’t work around it; tell me what happened.
+```
+
+Expected: `PreToolUse` hook → `contracts/ is read-only in implementation sessions — raise a contract-change issue`, and `git status` stays clean. The hook only runs after the workspace-trust prompt has been accepted (see pre-flight).
+
 **Likely questions:**
 
 | If Claude asks… | Answer (slide 21 notes) |
 |---|---|
 | B: can it add the field to the contract? | No, raise a contract-change issue and carry on without it. |
 
-Other questions Claude asked in rehearsal: fill in at rehearsal.
+Other questions Claude asked in rehearsal 1:
+
+| If Claude asks… | Answer |
+|---|---|
+| B: ship the client without the display name, or hold the PR? | Ship without it. The contract-change issue tracks the display name. |
+| B (or A): may it create the branch / run `git switch -c`? | Yes: approve it. |
 
 **Expected output:**
 - **A:** claims TASK-07 (REQ-ALW-003 and REQ-ALW-004, `src/ledger/rules/`). It writes tests named `test_REQ_ALW_…` before the code, the provider contract tests pass, it opens a PR and TASK-07 moves to In review.

@@ -2,7 +2,7 @@
 id: cli-pretty
 stop: spec-light
 covers: [tools/pretty.py]
-verified_at: null
+verified_at: 51135b1
 owner: person-a
 ---
 

@@ -2,7 +2,7 @@
 id: allowance-ledger
 stop: evidentiary
 covers: [src/ledger/, contracts/ledger-api.yaml]
-verified_at: null
+verified_at: 51135b1
 owner: person-a
 ---
 

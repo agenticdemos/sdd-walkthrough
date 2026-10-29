@@ -17,3 +17,7 @@ owner: person-b
 1. **REQ-RPT-001** (event): WHEN the daily report runs, the report job shall list every subscriber whose remaining overall allowance is below £[1,000].
 
 2. **REQ-RPT-002** (unwanted): IF the ledger API is unavailable, THEN the report job shall exit non-zero and write no partial report.
+
+## Notes
+
+- **Sub-limit flag.** `src/report/flags.py` flags a subscription received in a tax year where the ledger’s cash sub-limit applies: tax year 2027 onwards, a tax year being named by the year it starts in (2027 is 6 April 2027 to 5 April 2028). It follows the allowance-ledger spec’s cash sub-limit requirement and adds no requirement of its own.

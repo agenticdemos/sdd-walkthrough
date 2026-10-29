@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Pre-flight for the live session (demo helper, not part of the sdd skill).
 #   1. two worktrees, ../sdd-a and ../sdd-b, on fresh branches demo/live-a and
-#      demo/live-b at stage/04-plan (any earlier rehearsal in them is discarded)
+#      demo/live-b at demo/parallel-start (any earlier rehearsal in them is discarded)
 #   2. gh is logged in with the `project` scope
 #   3. the board is reset to the demo-3 seed state
 # Safe to re-run. Override the start point with STAGE=<ref> scripts/setup_demo.sh
 set -euo pipefail
 
-STAGE="${STAGE:-stage/04-plan}"
+STAGE="${STAGE:-demo/parallel-start}"   # G1: stage/04-plan + contract v1 frozen + ledger without TASK-07
 ROOT="$(git rev-parse --show-toplevel)"
 PARENT="$(dirname "$ROOT")"
 cd "$ROOT"

@@ -14,7 +14,7 @@ Session: 29 Oct 2026, 11:00, 60 minutes. Deck: *Spec-Driven Development, End to 
 | 1 · Requirements | 8 (0:10) | A · `git switch --detach stage/00-brief` | Design, design review | 11 (0:17) | `git switch --detach stage/01-requirements` |
 | 2 · Design and review | 12 (0:19) | A · `git switch -c contract/v1` | Decomposition, visibility | 15 (0:24) | `git switch --detach stage/02-design` |
 | 3 · Tasks and board | 16 (0:26) | A · same branch | Parallel work, gates | 20 (0:33) | `make board-reset` |
-| 4 · Parallel | 21 (0:35) | A · `cd ../sdd-a`, B · `cd ../sdd-b` (both at `stage/04-plan`) | Testing, evidence, mutation testing, demo 5 kick-off, freshness | 27 (0:45) | `demo/a-provider`, `demo/b-consumer` |
+| 4 · Parallel | 21 (0:35) | A · `cd ../sdd-a`, B · `cd ../sdd-b` (both at `demo/parallel-start`: G1 passed) | Testing, evidence, mutation testing, demo 5 kick-off, freshness | 27 (0:45) | `demo/a-provider`, `demo/b-consumer` |
 | 5 · Mutation and evidence | 25 (0:42) | C · `git switch --detach stage/06-testing` | Freshness, demo 4 review | 28 (0:47), then `make fresh` on `demo/act4-drift` | `demo/act5-fix` |
 | 6 · Landing | 30 (0:51) | C · `scripts/reset_act6.sh` | How the queue works | 32 (0:54) | Merge-queue run in the browser; recorded queue log under `docs/demo/` |
 
@@ -28,7 +28,7 @@ Session: 29 Oct 2026, 11:00, 60 minutes. Deck: *Spec-Driven Development, End to 
 - [ ] Delete the branches that rehearsals leave behind: `git branch -D contract/v1 demo/live-requirements`. Demo 2's `git switch -c` fails if `contract/v1` already exists.
 - [ ] Clear rehearsal output, so that no live result looks prebuilt: `rm -rf evidence/allowance-ledger mutants`.
 - [ ] Close any PRs and issues left from demo 4 rehearsals. List them with `gh pr list` and `gh issue list --label contract-change`. Close each with `gh pr close <n> --delete-branch` or `gh issue close <n>`.
-- [ ] Run `scripts/setup_demo.sh`. It creates the worktrees `../sdd-a` and `../sdd-b` at `stage/04-plan`, resets the board to the slide 20 state and checks `gh auth status`.
+- [ ] Run `scripts/setup_demo.sh`. It creates the worktrees `../sdd-a` and `../sdd-b` at `demo/parallel-start` (G1: `stage/04-plan` plus contract v1.0.0 frozen and the ledger without TASK-07), resets the board to the slide 20 state and checks `gh auth status`.
 - [ ] Open three terminals with a large font:
   - A in the repo root, on `main`, with `git status` clean.
   - B in `../sdd-b`.
@@ -241,15 +241,15 @@ The board script is idempotent, so it is safe to run again if it fails part-way.
 
 **Kick-off:** slide 21 `d4-go`, at 0:35. **Review:** slide 27, at 0:45, after the demo 5 kick-off and the freshness slide. **Runs during:** slides 22–26 (testing, evidence, mutation testing, the demo 5 kick-off, freshness). **Slide expects:** ten to fifteen minutes; this is the longest step.
 
-**Start.** `scripts/setup_demo.sh` prepared both worktrees at `stage/04-plan`, with contract v1 frozen. This is the G1-to-G2 part of the plan.
+**Start.** `scripts/setup_demo.sh` prepared both worktrees at `demo/parallel-start`: `stage/04-plan` plus contract v1.0.0 frozen, the ledger built through TASK-06 with no cash sub-limit, and no report client. The consumer contract tests fail until B writes `src/report/client.py`. This is the G1-to-G2 part of the plan.
 
 ```sh
 # terminal A
-cd ../sdd-a && git log --oneline --decorate -1     # expect stage/04-plan
+cd ../sdd-a && git log --oneline --decorate -1     # expect G1 start for demo 4
 claude
 
 # terminal B
-cd ../sdd-b && git log --oneline --decorate -1     # expect stage/04-plan
+cd ../sdd-b && git log --oneline --decorate -1     # expect G1 start for demo 4
 claude
 ```
 

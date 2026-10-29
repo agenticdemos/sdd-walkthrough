@@ -37,7 +37,8 @@ Session: 29 Oct 2026, 11:00, 60 minutes. Deck: *Spec-Driven Development, End to 
   - the GitHub Project `SDD walkthrough`, filtered to this repo;
   - the merge-queue run on `main` (the three act6 PRs, with PR 2 removed);
   - the repo's pull-request list.
-- [ ] Claude permission mode, chosen at rehearsal: fill in at rehearsal.
+- [ ] Open `claude` once in the repo root and accept the workspace-trust prompt. Until you do, interactive sessions do not run project hooks, so the contracts guard would not fire in demo 4.
+- [ ] Claude permission mode: set it explicitly (Shift+Tab) to **accept edits**. Rehearsal 1 used `acceptEdits`. Recent versions start in auto mode by default.
 
 ---
 
@@ -77,7 +78,7 @@ Use the sdd skill. Read docs/brief.md. First tell me which stop on the dial this
 | The approver | The product owner. |
 | Whether the figures are real | All figures are illustrative. |
 
-**Questions Claude asked in rehearsal:** fill in at rehearsal.
+**Questions Claude asked in rehearsal 1 (29 Oct, 110 s to the questions, then 229 s to write):** it named the stop as **evidentiary** first, then asked whether to reject the whole subscription or only the excess; which date sets the tax year; whether backdated subscriptions are allowed; the exact year the £12,000 cash limit starts; whether the limits are fixed or configurable per year; which date is used for age 65 and whether the boundary is strict; and how cash and stocks subscriptions are told apart. The answer sheet above covers every one of these. For anything else, answer "use your judgement and list it as an open question". Rehearsal 1 wrote 12 REQs, not 7, with source, evidence and approver lines and REQ-012 deferred. Fallback `stage/01-requirements` has the brief's 7.
 
 **Expected output:** `specs/allowance-ledger/requirements.md`, numbered from REQ-ALW-001, with:
 - one EARS pattern per requirement;
@@ -407,13 +408,13 @@ Use the sdd skill. Run the landing queue against demo/trunk and show me the summ
 
 | Order | PR # | Branch | Change | Alone | After PR 1 |
 |---|---|---|---|---|---|
-| 1 | fill in | `act6/tax-year-end-label` | `tax_year()` now returns the year the tax year **ends** (2028 for 2027/28), and every caller and test is updated | green | — |
-| 2 | fill in | `act6/sub-limit-flag` | A new `src/report/flags.py` that calls `tax_year(d) >= 2027` assuming start-year semantics, plus tests | green | **red**: a 2026/27 date is flagged a year early and the REQ-ALW-003 test fails |
-| 3 | fill in | `act6/glossary` | Docs only | green | green |
+| 1 | see `gh pr list --base demo/trunk` | `act6/tax-year-end-label` | `tax_year()` now returns the year the tax year **ends** (2028 for 2027/28), and every caller and test is updated | green | — |
+| 2 | see `gh pr list --base demo/trunk` | `act6/sub-limit-flag` | A new `src/report/flags.py` that calls `tax_year(d) >= 2027` assuming start-year semantics, plus tests | green | **red**: a 2026/27 date is flagged a year early and the REQ-ALW-003 test fails |
+| 3 | see `gh pr list --base demo/trunk` | `act6/glossary` | Docs only | green | green |
 
 No file is touched by both PR 1 and PR 2, so git reports no conflict.
 
-**Likely questions:** fill in at rehearsal.
+**Likely questions:** none in rehearsal. `make land BASE=demo/trunk` took 49 s for the three PRs (29 Oct). PRs are recreated with new numbers by every `scripts/reset_act6.sh` run.
 
 **Expected output:**
 - **The queue.** Claude runs `make land BASE=demo/trunk`. For each PR in turn, the script rebases it onto `demo/trunk`, runs `make check`, then lands or ejects it.
@@ -477,7 +478,7 @@ Fill in one column per rehearsal. If a step overruns its window, start it later.
 
 | Step | Window on the clock | Deck expects | Rehearsal 1 | Rehearsal 2 | Rehearsal 3 | Live |
 |---|---|---|---|---|---|---|
-| Demo 1: requirements | 0:10 → 0:17 | 2–4 min to write | | | | |
+| Demo 1: requirements | 0:10 → 0:17 | 2–4 min to write | 1:50 to questions + 3:49 to write | | | |
 | Demo 2: design and review | 0:19 → 0:24 | 5–8 min | | | | |
 | Demo 3: tasks and board | 0:26 → 0:33 | 3–5 min | | | | |
 | Demo 4: parallel, A | 0:35 → 0:45 | 10–15 min | | | | |
@@ -485,14 +486,14 @@ Fill in one column per rehearsal. If a step overruns its window, start it later.
 | Demo 5: mutation and evidence | 0:42 → 0:47 | 4–6 min | | | | |
 | `make mutate` on `stage/06-testing` | — | under 2 min (brief) | | | | |
 | `make fresh` on `demo/act4-drift` | at 0:47 | a few seconds | | | | |
-| Demo 6: landing queue | 0:51 → 0:54 | 3–5 min | | | | |
+| Demo 6: landing queue | 0:51 → 0:54 | 3–5 min | `make land` 0:49 | | | |
 | Summary slide reached | 0:56 | — | | | | |
 
 **Questions Claude asked** (one row per demo, filled in at rehearsal):
 
 | Demo | Rehearsal 1 | Rehearsal 2 | Rehearsal 3 |
 |---|---|---|---|
-| 1 | | | |
+| 1 | whole vs excess rejection; tax-year date; backdating; sub-limit start year; configurable limits; age-65 date and boundary; cash vs stocks | | |
 | 2 | | | |
 | 3 | | | |
 | 4 A | | | |
